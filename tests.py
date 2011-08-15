@@ -2,7 +2,7 @@
 """
 from unittest2 import TestCase
 
-from channel import Channel
+from channel import Channel, CallbackError, UnboundChannel
 
 class Tests(TestCase):
     def setUp(self):
@@ -23,9 +23,22 @@ class Tests(TestCase):
                          '....')
 
     def test_subscribers(self):
+        with self.assertRaises(UnboundChannel):
+            self.main.subscribers()
         self.main.bind(self.exchange)
         self.assertEqual(self.main.subscribers(),[])
 
-
+    def test_subscribe(self):
+        self.main.bind(self.exchange)
+        def f(**kargs): pass
+        with self.assertRaises(CallbackError):
+            self.main.subscribe(f)
+        def g(*args, **kargs): self.called_with=[args, kargs]
+        self.main.subscribe(g)
+        self.assertEqual([g],
+                         self.main.subscribers())
+        self.main('testing')
+        self.assertEqual([(), {'args': ('testing',)}],
+                         self.called_with)
 if __name__=='__main__':
     import unittest2; unittest2.main()

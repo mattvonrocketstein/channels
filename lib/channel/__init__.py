@@ -2,6 +2,7 @@
 """
 
 class UnboundChannel(Exception): pass
+class CallbackError(Exception): pass
 
 class ChannelType(type):
     """ metaclass for channels """
@@ -102,7 +103,12 @@ class Channel(object):
     @F("cannot subscribe to an unbound channel")
     def subscribe(kls, callback):
         verify_callback(callback)
-        return kls._exchange.subscribe(kls._label, callback)
+        exchange = kls._exchange
+        func = getattr(exchange, 'subscribe', None)
+        if func is None:
+            def func(chanName, subscriber):
+                exchange[chanName] += [subscriber]
+        return func(kls._label, callback)
 
     @F("cannot publish to a unbound channel")
     def _publish(kls, *args, **kargs):
@@ -182,7 +188,6 @@ def verify_callback(callback):
     except AttributeError: #used declare_channel?
       s=pep362.signature(callback.fxn)
 
-    #from IPython import Shell; Shell.IPShellEmbed(argv=['-noconfirm_exit'])()
     not_more_than2 = lambda s: len(s._parameters) < 3
     if2then_self_is_one = lambda s: ( len(s._parameters)!=2 and \
                                       True ) or \
@@ -190,11 +195,13 @@ def verify_callback(callback):
                                       'self' in s._parameters ) or \
                                     False
     at_least_one = lambda s: len(s._parameters)>0
-    assert (not s.var_args) and \
-           not_more_than2(s) and\
-           if2then_self_is_one(s) and \
-           at_least_one(s) and \
-           s.var_kw_args, 'callback@{name} needs to accept *args and **kargs'.format(name=s.name)
+    tests=[ s.var_args,
+            not_more_than2(s),
+            if2then_self_is_one(s),
+            #at_least_one(s),
+            s.var_kw_args ]
+    if not all(tests):
+       raise CallbackError('callback@{name} needs to accept *args and **kargs'.format(name=s.name))
 
 # TODO: move this into core.channels and formalize it
 # standard unpacking method: special name "args" and everything but "args"
