@@ -2,7 +2,8 @@
 """
 from unittest2 import TestCase
 
-from channel import Channel, CallbackError, UnboundChannel
+from channel import Channel, declare_callback
+from channel import CallbackError, UnboundChannel
 
 class SimpleTests(TestCase):
     """ These tests are more or less complete for simple dictionaries. """
@@ -11,6 +12,7 @@ class SimpleTests(TestCase):
         self.main = Channel.MAIN
         def callback(*args, **kargs): self.called_with=[args, kargs]
         self.callback = callback
+        self.called_with=None
 
     def tearDown(self):
         self.main.bind(self.exchange)
@@ -47,7 +49,6 @@ class SimpleTests(TestCase):
         self.assertEqual([(), {'args': ('testing',)}],
                          self.called_with,
                          'subscriber was not notified')
-        del self.called_with
         self.main.unsubscribe(self.callback)
         self.assertEqual(self.main.subscribers(),[],
                          'unsubscription did not take effect')
@@ -62,9 +63,21 @@ class SimpleTests(TestCase):
         subchan('testing')
         self.assertEqual([(), {'args': ('testing',)}],
                          self.called_with)
+
 class ComplexTests(TestCase):
     """ TODO: tests for more complex exchanges
               that support subscribe(), etc
     """
+
+class DeclareCallbackTest(SimpleTests):
+    def test_decorator(self):
+        self.main.bind(self.exchange)
+        @declare_callback(self.main)
+        def testing(*args, **kargs):
+            self.called_with = [args,kargs]
+        self.main("testing")
+        self.assertEqual(self.called_with,
+                         [(), {'args': ('testing',)}])
+
 if __name__=='__main__':
     import unittest2; unittest2.main()

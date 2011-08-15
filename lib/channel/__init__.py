@@ -211,24 +211,20 @@ unpack = lambda data: ( data['args'],
 def declare_callback(channel=None):
     assert channel,"declare_callback decorator requires 'channel' argument"
     def decorator(fxn):
-        fxn.declared_callback=1
+        fxn.declared_callback = 1
         def bootstrap(self):
             if hasattr(self, 'subscribed'):
                 return False
             else:
-                exchange = ChannelType.registry[channel]
+                exchange = channel._exchange
                 self.subscribed = 1
-                k = new.instancemethod(fxn, self, self.__class__)
-                setattr(self, fxn.__name__, k)
-                exchange.subscribe(k)
+                channel.subscribe(fxn)
                 return self
 
-        def new_function(self, ctx, **data):
-            return fxn(self, ctx, **data)
+        bootstrap(fxn)
 
-        new_function.bootstrap=bootstrap
-        new_function.declared_callback=1
-        return new_function
+        return fxn
+
     return decorator
 
 def is_declared_callback(fxn):
