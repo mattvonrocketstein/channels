@@ -1,4 +1,49 @@
 """ channels
+
+     Channels work via an "exchange", and can't do much until they are bound.
+     A channel is bound using chan.bind(some_exchange). An exchange can be any
+     object, provided it obeys the dictionary protocol.
+
+      >>> event._exchange
+      <PostOffice-Service 174661484>
+      >>> event._exchange[event.__name__]
+      (<bound method Terminal.push_q of <Terminal-Service 175386220>>,)
+
+    For a bound channel, both the channel and the exchange can answer questions
+    about the subscribers.
+
+      >>> event.subscribers()
+      (<bound method Terminal.push_q of <Terminal-Service 176017164>>,)
+      >>> event._exchange[event.__name__]
+      (<bound method Terminal.push_q of <Terminal-Service 176017164>>,)
+
+    You can build a subchannel on the fly:
+
+      >>> event.foo
+      <CHAN-(EVENT_T::foo)>
+
+    Subchannels are cached and won't be created repeatedly
+
+      >>> foo_channel = event.foo
+      >>> foo_channel == event.foo
+      True
+
+    By default, subchannels get the same exchange their parent has
+
+      >>> event.foo._exchange==event._exchange
+      True
+
+    Channels can non-recursively enumerate their subchannels
+
+      >>> event.subchannels()
+      [<CHAN-(EVENT_T::foo)>]
+
+    Push a message into the channel by simply calling it. By default,
+    channels should accept any number of arguments of any type.
+
+      >>> event("testing")
+      >>> event(str,object)
+
 """
 
 class UnboundChannel(Exception): pass
@@ -8,8 +53,7 @@ class ChannelType(type):
     """ metaclass for channels """
 
     def __getattr__(kls, name):
-        """ only attributes not starting with
-            "_" are organized in the tree
+        """ only attributes not starting with "_" are organized in the tree
         """
         FORBIDDEN = ['trait_names', # used by ipython tab completion
                      'bound','bind',
@@ -63,13 +107,16 @@ class ChannelType(type):
 
     @property
     def bound(self):
+        """ """
         return self._bound
 
     @property
     def name(kls):
+        """ """
         return kls.__name__.split('.')[-1]
 
     def __repr__(self):
+        """ """
         return '<CHAN-({c})>'.format(c=self.__name__)
 
 def F(msg):
@@ -133,10 +180,12 @@ class Channel(object):
 
     @classmethod
     def unsubscribe_all(kls):
+        """ """
         [ kls.unsubscribe(subscriber) for subscriber in kls.subscribers() ]
 
     @classmethod
     def destroy(kls):
+        """ """
         kls.unsubscribe_all()
         del Channel.__metaclass__.registry[kls._label]
         return None
@@ -153,8 +202,6 @@ class Channel(object):
         kls._bound      = True
         kls._exchange = postoffice
         return kls
-
-channel=Channel
 
 class ChannelManager(object):
     @classmethod
@@ -203,11 +250,6 @@ def verify_callback(callback):
     if not all(tests):
        raise CallbackError('callback@{name} needs to accept *args and **kargs'.format(name=s.name))
 
-# TODO: move this into core.channels and formalize it
-# standard unpacking method: special name "args" and everything but "args"
-unpack = lambda data: ( data['args'],
-                        dict([ [d,data[d]] for d in data if d!='args']) )
-
 def declare_callback(channel=None):
     assert channel,"declare_callback decorator requires 'channel' argument"
     def decorator(fxn):
@@ -229,4 +271,7 @@ def declare_callback(channel=None):
 
 def is_declared_callback(fxn):
     return hasattr(fxn, 'declared_callback')
-import new
+
+# standard unpacking method: special name "args" and everything but "args"
+unpack = lambda data: ( data['args'],
+                        dict([ [d,data[d]] for d in data if d!='args']) )
