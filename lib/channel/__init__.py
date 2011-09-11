@@ -202,6 +202,7 @@ class Channel(object):
         kls._bound      = True
         kls._exchange = postoffice
         return kls
+channel = Channel
 
 class ChannelManager(object):
     @classmethod
