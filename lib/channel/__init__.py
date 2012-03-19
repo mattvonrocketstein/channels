@@ -136,6 +136,11 @@ def F(msg):
         return classmethod(new)
     return if_bound
 
+class Message(object):
+    def __str__(self):
+        return '<Message '.join(self.__dict__.keys())+'>'
+    __repr__=__str__
+
 class Channel(object):
     """
         TODO: channel type declarations.. use linda?
@@ -160,13 +165,13 @@ class Channel(object):
     @F("cannot publish to a unbound channel")
     def _publish(kls, *args, **kargs):
         assert 'args' not in kargs,"'args' is reserved for internal use"
-        kargs.update(dict(args=args))
+        #kargs.update(dict(args=args))
         exchange = kls._exchange
         func = getattr(exchange, 'publish', None)
         if func is None:
             def func(chanName, **msg):
                 [sub(**msg) for sub in exchange[chanName] ]
-        return func(kls._label, **kargs)
+        return func(kls._label, *args, **kargs)
 
     @classmethod
     def unsubscribe(kls, subscriber):
@@ -237,19 +242,22 @@ def verify_callback(callback):
       s=pep362.signature(callback.fxn)
 
     not_more_than2 = lambda s: len(s._parameters) < 3
-    if2then_self_is_one = lambda s: ( len(s._parameters)!=2 and \
-                                      True ) or \
-                                    ( len(s._parameters)==2 and  \
-                                      'self' in s._parameters ) or \
-                                    False
-    at_least_one = lambda s: len(s._parameters)>0
-    tests=[ s.var_args,
-            not_more_than2(s),
-            if2then_self_is_one(s),
-            #at_least_one(s),
-            s.var_kw_args ]
-    if not all(tests):
-       raise CallbackError('callback@{name} needs to accept *args and **kargs'.format(name=s.name))
+    if2then_self_is_one = lambda s: ( len(s._parameters)!=2 and True ) or \
+                                    ( len(s._parameters)==2 and 'self' in s._parameters )
+
+    at_least_one = lambda s: len(s._parameters) > 0
+    if not s.var_args:
+       # maybe warn them or something here..
+       pass
+    tests = [ #s.var_args,
+              not_more_than2(s),
+              if2then_self_is_one(s),
+              #at_least_one(s),
+               ]
+
+    if not s.var_kw_args: #all(tests):
+       err='callback@{name} needs to accept **kargs'
+       raise CallbackError(err.format(name=s.name))
 
 def declare_callback(channel=None):
     assert channel,"declare_callback decorator requires 'channel' argument"
