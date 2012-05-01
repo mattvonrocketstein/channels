@@ -216,6 +216,8 @@ class ChannelManager(object):
     def enumerate_embedded_channels(kls):
         """ derives the channels embedded
             in this kls by way of inspection
+
+            TODO: should this really be a classmethod?
         """
         CHANNELS = getattr(kls, 'CHANNELS', [])
         if CHANNELS: return CHANNELS
@@ -226,6 +228,16 @@ class ChannelManager(object):
             if isinstance(obj, ChannelType):
                 matches.append(obj)
         return matches
+
+    def add_channel(self, name):
+        """ """
+        if hasattr(self.__class__,name):
+            raise AttributeError,'Bad name for channel.. already taken'
+        else:
+            chan = getattr(channel,name)
+            setattr(self.__class__,name, chan)
+            chan.bind(self)
+            return chan
 
     def bind_embedded_channels(self):
         for chan in self.enumerate_embedded_channels():
