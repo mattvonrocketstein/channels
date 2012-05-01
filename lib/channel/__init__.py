@@ -75,14 +75,16 @@ class ChannelType(type):
         ## This is a class with Channel somewhere in it's ancestry,
         ## if it's bound, then make a bound subchannel, otherwise yell
         else:
-            if kls._bound:
-                if name in FORBIDDEN or '(' in name:
-                    raise AttributeError("ChannelType: %r has no attribute %s" % (kls.__name__, name))
-                subchan = getattr(channel, kls._label + '::' + name)
-                subchan.bind(kls._exchange)
-                return subchan
-            else:
-                raise UnboundChannel("cannot subchannel an unbound channel")
+            raise Exception,'NIY'
+            #if kls._bound:
+            #    if name in FORBIDDEN or '(' in name:
+            #        err = "ChannelType: %r has no attribute %s" % (kls.__name__, name)
+            #        raise AttributeError(err)
+            #    subchan = getattr(channel, kls._label + '::' + name)
+            #    subchan.bind(kls._exchange)
+            #    return subchan
+            #else:
+            #    raise UnboundChannel("cannot subchannel an unbound channel")
 
     def __new__(mcls, name, bases, dct):
         """ called when initializing (configuring)
@@ -219,8 +221,9 @@ class ChannelManager(object):
         if CHANNELS: return CHANNELS
         matches = []
         for name in dir(kls):
+            if name.startswith('__'): continue
             obj = getattr(kls, name)
-            if hasattr(obj,'_bound'): #HACK
+            if isinstance(obj, ChannelType):
                 matches.append(obj)
         return matches
 
