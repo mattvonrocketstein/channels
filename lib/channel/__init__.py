@@ -75,16 +75,16 @@ class ChannelType(type):
         ## This is a class with Channel somewhere in it's ancestry,
         ## if it's bound, then make a bound subchannel, otherwise yell
         else:
-            raise Exception,'NIY'
-            #if kls._bound:
-            #    if name in FORBIDDEN or '(' in name:
-            #        err = "ChannelType: %r has no attribute %s" % (kls.__name__, name)
-            #        raise AttributeError(err)
-            #    subchan = getattr(channel, kls._label + '::' + name)
-            #    subchan.bind(kls._exchange)
-            #    return subchan
-            #else:
-            #    raise UnboundChannel("cannot subchannel an unbound channel")
+            #raise Exception,'NIY'
+            if kls._bound:
+                if name in FORBIDDEN or '(' in name:
+                    err = "ChannelType: %r has no attribute %s" % (kls.__name__, name)
+                    raise AttributeError(err)
+                subchan = getattr(channel, kls._label + '::' + name)
+                subchan.bind(kls._exchange)
+                return subchan
+            else:
+                raise UnboundChannel("cannot subchannel an unbound channel")
 
     def __new__(mcls, name, bases, dct):
         """ called when initializing (configuring)
@@ -171,9 +171,16 @@ class Channel(object):
         exchange = kls._exchange
         func = getattr(exchange, 'publish', None)
         if func is None:
-            def func(chanName, **msg):
-                [sub(**msg) for sub in exchange[chanName] ]
-        return func(kls._label, *args, **kargs)
+            chanName = kls.name
+            #print 'none'
+            #from IPython import Shell; Shell.IPShellEmbed(argv=['-noconfirm_exit'])()
+            def func(*args1, **kargs1):
+                [sub(*args1, **kargs1) for sub in exchange[chanName] ]
+        try:
+            return func(kls._label, *args, **kargs)
+        except TypeError:
+            print 'terrer'
+            from IPython import Shell; Shell.IPShellEmbed(argv=['-noconfirm_exit'])()
 
     @classmethod
     def unsubscribe(kls, subscriber):
@@ -274,7 +281,18 @@ def verify_callback(callback):
        err='callback@{name} needs to accept **kargs'
        raise CallbackError(err.format(name=s.name))
 
-def declare_callback(channel=None):
+class Callback(object):
+    def __init__(self, fxn):
+        self.fxn = fxn
+
+class declare_callback(object):
+    def __init__(self, channel_name):
+        self.channel_name = channel_name
+    def __call__(self, fxn):
+        return Callback(fxn)
+
+#def declare_callback(channel=None):
+"""
     assert channel,"declare_callback decorator requires 'channel' argument"
     def decorator(fxn):
         fxn.declared_callback = 1
@@ -292,7 +310,7 @@ def declare_callback(channel=None):
         return fxn
 
     return decorator
-
+    """
 def is_declared_callback(fxn):
     return hasattr(fxn, 'declared_callback')
 

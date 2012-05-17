@@ -1,4 +1,4 @@
-""" tests for channels
+""" channels/tests/test_simple.py
 """
 from unittest2 import TestCase
 
@@ -39,14 +39,12 @@ class SimpleTests(TestCase):
     def test_subscribe(self):
         self.main.bind(self.exchange)
         def f(**kargs): pass
-        with self.assertRaises(CallbackError):
-            self.main.subscribe(f)
         self.main.subscribe(self.callback)
         self.assertEqual([self.callback],
                          self.main.subscribers(),
                          'subscription failed to propogate')
         self.main('testing')
-        self.assertEqual([(), {'args': ('testing',)}],
+        self.assertEqual([(self.main.name, 'testing'),{}],
                          self.called_with,
                          'subscriber was not notified')
         self.main.unsubscribe(self.callback)
@@ -61,41 +59,5 @@ class SimpleTests(TestCase):
                          'subchan did not show in subchannels() enumeration')
         subchan.subscribe(self.callback)
         subchan('testing')
-        self.assertEqual([(), {'args': ('testing',)}],
+        self.assertEqual([(subchan.name, 'testing'),{}],
                          self.called_with)
-
-class ComplexTests(TestCase):
-    """ TODO: tests for more complex exchanges
-              that support subscribe(), etc
-    """
-
-class DeclareCallbackTest(SimpleTests):
-    def test_decorator(self):
-        self.main.bind(self.exchange)
-        @declare_callback(self.main)
-        def testing(*args, **kargs):
-            self.called_with = [args,kargs]
-        self.main("testing")
-        self.assertEqual(self.called_with,
-                         [(), {'args': ('testing',)}])
-import copy
-class TestFavorites(TestCase):
-    def test_foo(self):
-        exchange = {}
-        channel  = Channel.main
-        channel.bind(exchange)
-        class Person:
-            def listen_to(self,other): other.vox.subscribe(self.ear)
-
-        def ear(*args, **kargs): print args, kargs
-        alice = Person(); alice.name='alice'
-        bob   = Person(); bob.name = 'bob'
-        alice.vox = getattr(channel, 'alice')
-        bob.vox   = getattr(channel, 'bob')
-        bob.ear = copy.copy(ear)
-        bob.listen_to(alice)
-
-        from IPython import Shell; Shell.IPShellEmbed(argv=['-noconfirm_exit'])()
-
-if __name__=='__main__':
-    import unittest2; unittest2.main()
