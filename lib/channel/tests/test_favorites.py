@@ -1,11 +1,9 @@
-""" tests/test_favorites.py
+""" channel.tests.test_favorites
 """
 import copy
 from unittest2 import TestCase
 
 from channel import Channel
-
-from .test_simple import SimpleTests
 
 
 class TestFavorites(TestCase):
@@ -23,3 +21,6 @@ class TestFavorites(TestCase):
         bob.vox   = getattr(channel, 'bob')
         bob.ear = copy.copy(ear)
         bob.listen_to(alice)
+
+if __name__=='__main__':
+    import unittest2; unittest2.main()

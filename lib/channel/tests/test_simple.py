@@ -1,22 +1,14 @@
-""" channels/tests/test_simple.py
+""" channels.tests.test_simple
 """
 from unittest2 import TestCase
 
 from channel import Channel, declare_callback
 from channel import CallbackError, UnboundChannel
+from channel.tests.base import BaseChannelTest
 
-class SimpleTests(TestCase):
+class SimpleTests(BaseChannelTest):
     """ These tests are more or less complete for simple dictionaries. """
-    def setUp(self):
-        self.exchange = {}
-        self.main = Channel.MAIN
-        def callback(*args, **kargs): self.called_with=[args, kargs]
-        self.callback = callback
-        self.called_with=None
 
-    def tearDown(self):
-        self.main.bind(self.exchange)
-        self.main.destroy()
 
     def test_channels_cached(self):
         self.assertEqual(self.main, Channel.MAIN,
@@ -61,3 +53,6 @@ class SimpleTests(TestCase):
         subchan('testing')
         self.assertEqual([(subchan.name, 'testing'),{}],
                          self.called_with)
+
+if __name__=='__main__':
+    import unittest2; unittest2.main()
