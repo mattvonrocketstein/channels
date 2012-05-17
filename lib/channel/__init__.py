@@ -49,7 +49,7 @@
 from channel.exceptions import UnboundChannel, CallbackError
 from channel.manager import ChannelManager
 from channel.metaclasses import ChannelType
-from channel._channel import Channel
+from channel._channel import Channel, channel
 from channel.callbacks import Callback, declare_callback
 
 
