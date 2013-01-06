@@ -33,7 +33,7 @@ class ChannelType(type):
         else:
             #raise Exception,'NIY'
             if kls._bound:
-                if name in FORBIDDEN or '(' in name:
+                if name in FORBIDDEN or '(' in name or name.startswith('_'):
                     err = "ChannelType: %r has no attribute %s" % (kls.__name__, name)
                     raise AttributeError(err)
                 subchan = getattr(Channel, kls._label + '::' + name)

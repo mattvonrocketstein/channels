@@ -14,6 +14,13 @@ class SimpleTests(BaseChannelTest):
         self.assertEqual(self.main, Channel.MAIN,
                          "should not have created a new channel "+\
                          "when one of the same name already exists")
+
+    def test_hasattr(self):
+        self.main.bind(self.exchange)
+        hasattr(self.main, '_bsdflk')
+        self.assertEqual([],self.main.subchannels(),
+                         'hasattr shouldnt make a subchan if the string starts with _')
+
     def test_bind(self):
         self.main.bind(self.exchange)
         self.assertEqual(self.main._exchange,

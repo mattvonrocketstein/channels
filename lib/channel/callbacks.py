@@ -23,7 +23,7 @@ class declare_callback(object):
 
     def handle_channeltype(self, chan):
         """ easy, we got handed a channel directly. """
-        self.channel=chan
+        self.channel = chan
 
     def __call__(self, fxn):
         cb = Callback(fxn)
@@ -37,9 +37,9 @@ def verify_callback(callback):
             def callback(self, ctx, **data): stuff()
     """
     try:
-      s=pep362.signature(callback)
+      s = pep362.signature(callback)
     except AttributeError: #used declare_channel?
-      s=pep362.signature(callback.fxn)
+      s = pep362.signature(callback.fxn)
 
     not_more_than2 = lambda s: len(s._parameters) < 3
     if2then_self_is_one = lambda s: ( len(s._parameters)!=2 and True ) or \

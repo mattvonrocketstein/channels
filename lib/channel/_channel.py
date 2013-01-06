@@ -29,20 +29,13 @@ class Channel(object):
     @F("cannot publish to a unbound channel")
     def _publish(kls, *args, **kargs):
         assert 'args' not in kargs,"'args' is reserved for internal use"
-        #kargs.update(dict(args=args))
         exchange = kls._exchange
         func = getattr(exchange, 'publish', None)
         if func is None:
             chanName = kls.name
-            #print 'none'
-            #from IPython import Shell; Shell.IPShellEmbed(argv=['-noconfirm_exit'])()
             def func(*args1, **kargs1):
                 [sub(*args1, **kargs1) for sub in exchange[chanName] ]
-        try:
-            return func(kls._label, *args, **kargs)
-        except TypeError:
-            print 'terrer'
-            from IPython import Shell; Shell.IPShellEmbed(argv=['-noconfirm_exit'])()
+        return func(kls._label, *args, **kargs)
 
     @classmethod
     def unsubscribe(kls, subscriber):

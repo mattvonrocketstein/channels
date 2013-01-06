@@ -64,7 +64,7 @@ class Message(object):
 """
     assert channel,"declare_callback decorator requires 'channel' argument"
     def decorator(fxn):
-        fxn.declared_callback = 1
+        fxn._declared_callback = 1
         def bootstrap(self):
             if hasattr(self, 'subscribed'):
                 return False
@@ -81,7 +81,7 @@ class Message(object):
     return decorator
     """
 def is_declared_callback(fxn):
-    return hasattr(fxn, 'declared_callback')
+    return hasattr(fxn, '_declared_callback')
 
 # standard unpacking method: special name "args" and everything but "args"
 unpack = lambda data: ( data['args'],
