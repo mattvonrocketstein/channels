@@ -3,13 +3,17 @@
 
 from channel.metaclasses import ChannelType
 from channel._channel import Channel
+from channel.exceptions import ChannelExists
 
 class ChannelManager(object):
+    """ """
+
     @classmethod
     def enumerate_embedded_channels(kls):
         """ derives the channels embedded
             in this kls by way of inspection
 
+            TODO: use goulash
             TODO: should this really be a classmethod?
         """
         CHANNELS = getattr(kls, 'CHANNELS', [])
@@ -24,8 +28,8 @@ class ChannelManager(object):
 
     def add_channel(self, name):
         """ """
-        if hasattr(self.__class__,name):
-            raise AttributeError,'Bad name for channel.. already taken'
+        if hasattr(self.__class__, name):
+            raise ChannelExists(name)
         else:
             chan = getattr(Channel, name)
             setattr(self.__class__,name, chan)
