@@ -1,1 +1,6 @@
+# channels requirements
+#########################
+tox
 pep362
+pytest
+unittest2

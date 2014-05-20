@@ -1,0 +1,10 @@
+# channels tests requirements
+#
+# FIXME: use tox.ini instead, why won't tox use this file?
+#
+##############################
+tox
+pep362
+pytest
+unittest2
+pytest
